@@ -34,7 +34,7 @@
 // #include "images/flat_green_retail.h"
 // #include "images/powered_by_directx.h"
 // #include "images/343.h"
-#include "images/machonacho_logo.h"
+#include "images/animation.h"
 
 
 // ----------------------------------------------------------------------------
