@@ -1,4 +1,5 @@
 name: Build Pico 2 UF2
+# rebuild with corrected animation payload
 
 on:
   push:
