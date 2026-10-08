@@ -1,0 +1,1 @@
+static const uint8_t __attribute__((aligned(4))) animation[] = {
