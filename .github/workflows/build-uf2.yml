@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'pico_fw/**'
+      - 'animation-source/**'
       - '.github/workflows/build-uf2.yml'
   workflow_dispatch:
 
@@ -14,10 +15,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check animation
+      - name: Generate animation header
         run: |
-          test -s pico_fw/include/images/animation.h
-          grep -q 'static const uint8_t' pico_fw/include/images/animation.h
+          test -s animation-source/animation.bin.gz
+          python3 - <<'PY'
+          import gzip
+          from pathlib import Path
+          data = gzip.decompress(Path("animation-source/animation.bin.gz").read_bytes())
+          out = Path("pico_fw/include/images/animation.h")
+          out.parent.mkdir(parents=True, exist_ok=True)
+          with out.open("w") as f:
+              f.write("static const uint8_t __attribute__((aligned(4))) animation[] = {\n")
+              for i in range(0, len(data), 16):
+                  f.write("    " + ", ".join(f"0x{b:02x}" for b in data[i:i+16]) + ",\n")
+              f.write("};\n")
+          print(f"animation: {len(data)} bytes")
+          PY
 
       - name: Install Pico toolchain
         run: |
