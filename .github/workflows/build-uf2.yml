@@ -17,7 +17,7 @@ jobs:
 
       - name: Reassemble animation
         run: |
-          cat animation-source/animchunk_* > /tmp/animation.b64
+          cat animation-source/animchunk_aa animation-source/animchunk_ab animation-source/animchunk_ac animation-source/adpart_aa animation-source/adpart_ab animation-source/adpart_ac animation-source/adpart_ad > /tmp/animation.b64
           base64 -d /tmp/animation.b64 > /tmp/animation.bin.gz
           gzip -t /tmp/animation.bin.gz
           gzip -dc /tmp/animation.bin.gz > pico_fw/include/images/animation.bin
