@@ -15,16 +15,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Generate animation header
+      - name: Reassemble animation
         run: |
-          test -s animation-source/animation.bin.gz
+          cat animation-source/animchunk_* > /tmp/animation.b64
+          base64 -d /tmp/animation.b64 > /tmp/animation.bin.gz
+          gzip -t /tmp/animation.bin.gz
+          gzip -dc /tmp/animation.bin.gz > pico_fw/include/images/animation.bin
           python3 - <<'PY'
-          import gzip
           from pathlib import Path
-          data = gzip.decompress(Path("animation-source/animation.bin.gz").read_bytes())
+          data = Path("pico_fw/include/images/animation.bin").read_bytes()
           out = Path("pico_fw/include/images/animation.h")
-          out.parent.mkdir(parents=True, exist_ok=True)
           with out.open("w") as f:
+              f.write("#pragma once\n#include <stdint.h>\n")
               f.write("static const uint8_t __attribute__((aligned(4))) animation[] = {\n")
               for i in range(0, len(data), 16):
                   f.write("    " + ", ".join(f"0x{b:02x}" for b in data[i:i+16]) + ",\n")
