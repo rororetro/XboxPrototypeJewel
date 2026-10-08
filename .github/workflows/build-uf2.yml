@@ -1,0 +1,52 @@
+name: Build Pico 2 UF2
+
+on:
+  push:
+    paths:
+      - 'pico_fw/**'
+      - '.github/workflows/build-uf2.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check animation
+        run: |
+          test -f pico_fw/include/images/animation.h || {
+            echo "Missing pico_fw/include/images/animation.h"
+            echo "Upload the generated animation_sampled.h there, then push/commit."
+            exit 1
+          }
+
+      - name: Patch firmware for animation
+        run: |
+          sed -i 's|#include "images/machonacho_logo.h"|#include "images/animation.h"|' pico_fw/src/xbox_jewel.c
+          sed -i 's/frame_count = (frame_count + 1) % 4;/frame_count = (frame_count + 1) % 1;/' pico_fw/src/xbox_jewel.c
+
+      - name: Install Pico toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi libnewlib-arm-none-eabi
+
+      - name: Configure
+        env:
+          PICO_SDK_FETCH_FROM_GIT: "1"
+        run: cmake -S pico_fw -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build -j2
+
+      - name: Verify UF2
+        run: |
+          ls -lh build/xbox_jewel.uf2
+          test -f build/xbox_jewel.uf2
+
+      - name: Upload UF2
+        uses: actions/upload-artifact@v4
+        with:
+          name: xbox-jewel-uf2
+          path: build/xbox_jewel.uf2
